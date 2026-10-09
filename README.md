@@ -53,10 +53,19 @@ Brief: `Mini_Project_Time_Series2_1st_periode_2026_SDIAE.pdf` (not in the repo; 
 ## How to run
 1. Open `timeseries_project.Rproj` in RStudio (sets the working directory = project root; all paths are relative).
 2. R packages: `install.packages(c("quantmod","xts","zoo","tseries","forecast","urca","vars","moments","rugarch","png"))`
-3. Run in order: `R/01_data_eda.R` -> `02_arima.R` -> `03_var_cointegration.R` -> `04_garch.R`.
-4. Python (run from the project root): `pip install yfinance pandas numpy matplotlib statsmodels scipy pmdarima`, then `python python/01_data_eda.py`, `python python/02_arima.py`.
-5. The first run downloads data and caches it in `data/` (R: `prices_R.csv`, Python: `prices.csv`). **Commit the cached CSVs** so everyone uses identical data.
-6. Figures are written to `figures/` (they are saved to files, not shown in the Plots pane).
+3. Run the R scripts in order: `R/01_data_eda.R` -> `02_arima.R` -> `03_var_cointegration.R` -> `04_garch.R`. After the Python step below, run `R/06_evaluation.R` (it needs `data/forecast_rnn_py.csv`).
+4. Python (run from the project root, with a virtual environment active):
+   - `pip install yfinance pandas numpy matplotlib statsmodels scipy pmdarima tensorflow`
+   - `python python/01_data_eda.py`, `python python/02_arima.py` (optional: `02` also works from the R price cache)
+   - **`python python/05_lstm_gru.py`** = LSTM and GRU. Smoke test first with `QUICK=1 python python/05_lstm_gru.py` (about 1 min). The full run takes about **7 min on a weak laptop CPU** (no GPU needed).
+5. The first run downloads data and caches it in `data/` (R: `prices_R.csv`, Python: `prices.csv`). **Commit the cached CSVs** so everyone uses identical data. If both exist, `data/prices.csv` and `data/prices_R.csv` must contain the same prices (the evaluation script checks this).
+6. Figures are written to `figures/` as files (they are not shown in the Plots pane).
+
+### Windows setup tips (learned the hard way)
+- Git Bash: activate the environment with `source .venv/Scripts/activate` (forward slashes). In cmd/PowerShell use `.venv\Scripts\activate`.
+- Keep the project OUT of OneDrive if you can (syncing thousands of `.venv` files slows installs and can freeze them).
+- If a `pip install` freezes and `Ctrl+C` does nothing in Git Bash: close the window, use cmd, and retry with `pip install --default-timeout=300 --no-cache-dir tensorflow`.
+- TensorFlow 2.21 runs on CPU on native Windows; that is enough for this project.
 
 ## Conventions (please keep)
 - Chronological 90/10 split: n = 1945 returns, train = 1750 (2019-01-03 to 2025-12-17), test = 195 (2025-12-18 to 2026-09-29). All scripts use the same alignment.
@@ -64,5 +73,22 @@ Brief: `Mini_Project_Time_Series2_1st_periode_2026_SDIAE.pdf` (not in the repo; 
 - Fixed seed `42`. One comment per block explaining *why*, not *what*.
 - Every script saves its forecasts to `data/` as CSV; the evaluation script (section 6) reads them to build one comparison table.
 
-## Status
-See `docs/PROGRESS.md` for results and the task list.
+## Status (9 Oct 2026)
+
+| Script | Content | State |
+|---|---|---|
+| `R/01_data_eda.R` | data, indicators, split, ACF/PACF, STL, outliers, ADF/KPSS | run on real data |
+| `R/02_arima.R` | ARIMA/SARIMA identification, diagnostics, h=10 forecast | run on real data |
+| `R/03_var_cointegration.R` | VAR, Granger, Phillips-Ouliaris, Johansen (12 specifications), VECM if needed | run on real data (no cointegration found) |
+| `R/04_garch.R` | ARCH test, GARCH variants, standardized-residual diagnostics, volatility plot | run on real data (section 8 sensitivity check not run yet) |
+| `python/01_data_eda.py`, `02_arima.py` | Python versions of the exploration and ARIMA | written; 02 only tested on simulated data |
+| **`python/05_lstm_gru.py`** | **LSTM and GRU, walk-forward validation, rolling test forecasts** | **run on real data (full version)** |
+| `R/06_evaluation.R` | one metrics table for ALL models, Diebold-Mariano tests, interval coverage | **written, NOT run yet** |
+| `python/03_*.py`, `python/04_*.py` | Python VAR/Granger/Johansen and GARCH (`arch` package) | **not written yet** (classical core is required in both languages) |
+
+### LSTM / GRU in one paragraph (details and numbers in `docs/PROGRESS.md`)
+Both networks predict the **next 10 daily AAPL returns** from the last 20 or 60 days of AAPL return, XLK return and 10-day volatility; price forecasts are rebuilt by cumulating the predicted returns. Hyperparameters (window, units) were chosen by **walk-forward (expanding window) validation inside the training period**, then each network was trained once and evaluated on **186 rolling forecast origins** over the test period. **Result: neither network beats a random walk with drift.** In validation their error is 0.5-1.2% *worse* than "always predict the average return", and on the test set all models are within 1-2% of each other. The 1-day direction hit rate (54-55%) is not distinguishable from the share of up-days (53%). This is an honest negative result, consistent with the weak predictability found by ARIMA and VAR.
+
+### How to use the files
+- `data/forecast_rnn_py.csv`: one row per (origin, horizon) with the actual log price and the LSTM, GRU and random-walk forecasts. `R/06_evaluation.R` merges ARIMA, VAR and GARCH forecasts at the same origins.
+- Task list and owners: `docs/PROGRESS.md`.
