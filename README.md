@@ -53,7 +53,7 @@ Brief: `Mini_Project_Time_Series2_1st_periode_2026_SDIAE.pdf` (not in the repo; 
 ## How to run
 1. Open `timeseries_project.Rproj` in RStudio (sets the working directory = project root; all paths are relative).
 2. R packages: `install.packages(c("quantmod","xts","zoo","tseries","forecast","urca","vars","moments","rugarch","png"))`
-3. Run the R scripts in order: `R/01_data_eda.R` -> `02_arima.R` -> `03_var_cointegration.R` -> `04_garch.R`. After the Python step below, run `R/06_evaluation.R` (it needs `data/forecast_rnn_py.csv`).
+3. Run the R scripts in order: `R/01_data_eda.R` -> `02_arima.R` -> `03_var_cointegration.R` -> `04_garch.R`. After the Python step below, run `R/06_evaluation.R` (it needs `data/forecast_rnn_py.csv`; it takes about 2 minutes).
 4. Python (run from the project root, with a virtual environment active):
    - `pip install yfinance pandas numpy matplotlib statsmodels scipy pmdarima tensorflow`
    - `python python/01_data_eda.py`, `python python/02_arima.py` (optional: `02` also works from the R price cache)
@@ -83,7 +83,7 @@ Brief: `Mini_Project_Time_Series2_1st_periode_2026_SDIAE.pdf` (not in the repo; 
 | `R/04_garch.R` | ARCH test, GARCH variants, standardized-residual diagnostics, volatility plot | run on real data (section 8 sensitivity check not run yet) |
 | `python/01_data_eda.py`, `02_arima.py` | Python versions of the exploration and ARIMA | written; 02 only tested on simulated data |
 | **`python/05_lstm_gru.py`** | **LSTM and GRU, walk-forward validation, rolling test forecasts** | **run on real data (full version)** |
-| `R/06_evaluation.R` | one metrics table for ALL models, Diebold-Mariano tests, interval coverage | **written, NOT run yet** |
+| `R/06_evaluation.R` | one metrics table for ALL models, Diebold-Mariano tests, interval coverage | **run on real data** (no model beats RW+drift significantly; see `docs/PROGRESS.md` section 7) |
 | `python/03_*.py`, `python/04_*.py` | Python VAR/Granger/Johansen and GARCH (`arch` package) | **not written yet** (classical core is required in both languages) |
 
 ### LSTM / GRU in one paragraph (details and numbers in `docs/PROGRESS.md`)
