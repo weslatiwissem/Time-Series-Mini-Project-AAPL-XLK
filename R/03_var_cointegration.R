@@ -86,3 +86,4 @@ for (ec in c("none","const","trend")) for (K in c(2,3,5,10)) {
   j <- ca.jo(Y, type="trace", ecdet=ec, K=K)
   cat(sprintf("ecdet=%-5s K=%2d | r=0 stat %.2f vs 5%% cv %.2f\n", ec, K, j@teststat[2], j@cval[2,"5pct"]))
 }
+

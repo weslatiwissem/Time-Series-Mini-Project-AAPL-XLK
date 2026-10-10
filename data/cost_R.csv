@@ -1,8 +1,8 @@
 "model","parameters","interpretability","seconds_for_all_origins"
 "RW",0,"total",0
 "RW_drift",1,"total",0
-"ARIMA",3,"high",7
+"ARIMA",3,"high",4
 "VAR",6,"high",2
-"GARCH",5,"high (variance equation)",90
+"GARCH",5,"high (variance equation)",61
 "LSTM",4938,"low (black box)",NA
 "GRU",1178,"low (black box)",NA

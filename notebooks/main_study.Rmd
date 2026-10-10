@@ -1,0 +1,92 @@
+---
+title: "Time series mini-project: AAPL and XLK (R study)"
+subtitle: "Data, exploration, ARIMA, VAR/cointegration, GARCH and final evaluation"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: show
+---
+
+**How to run.** Open `timeseries_project.Rproj` in RStudio, then knit this file (it lives in `notebooks/`; the setup chunk moves to the project root, so no path needs editing).
+**Order matters:** run `python/05_lstm_gru.py` (or `notebooks/advanced_models.ipynb`) *before* section 6 of this notebook, because the final comparison reads `data/forecast_rnn_py.csv`. If that file is missing, section 6 is skipped with a note instead of failing.
+The first knit downloads prices from Yahoo Finance and caches them in `data/prices_R.csv`; later runs are offline and identical. Each section below runs the corresponding commented script from `R/`, so the code shown here is exactly the code in the repository.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, fig.align = "center", out.width = "95%")
+ROOT <- normalizePath("..")                      # project root (this file is in notebooks/)
+knitr::opts_knit$set(root.dir = ROOT)            # every script uses paths relative to the root
+pkgs <- c("quantmod", "xts", "zoo", "tseries", "forecast", "urca", "vars", "moments", "rugarch", "png")
+miss <- setdiff(pkgs, rownames(installed.packages()))
+if (length(miss)) stop("Install first: install.packages(c(", paste0('"', miss, '"', collapse = ", "), "))")
+show_figs <- function(pattern) knitr::include_graphics(list.files(file.path(ROOT, "figures"), pattern = pattern, full.names = TRUE))
+script <- function(name) readLines(file.path(ROOT, "R", name))
+```
+
+# 1-2. Data preparation and exploratory analysis
+Import AAPL and XLK adjusted closes, build log price, log return, 20-day moving average and realised volatility, split chronologically 90/10 (train 1,750 / test 195), then explore the training set only: ACF/PACF, STL, outliers, descriptive statistics, ADF and KPSS.
+
+```{r eda, code = script("01_data_eda.R")}
+```
+
+```{r eda_figs, echo=FALSE}
+show_figs("^R0[123]_")
+```
+
+# 3.1 ARIMA / SARIMA
+Order identification (ACF/PACF), BIC grid vs `auto.arima`, a seasonal check (period 5), full residual diagnostics (Ljung-Box, Jarque-Bera, Shapiro-Wilk, ARCH-LM) and a 10-day forecast against a random-walk-with-drift baseline.
+
+```{r arima, code = script("02_arima.R")}
+```
+
+```{r arima_figs, echo=FALSE}
+show_figs("^R04_diag_")
+```
+
+# 3.2 VAR, Granger causality, cointegration
+Both log prices must be I(1). Cointegration is tested with Phillips-Ouliaris and Johansen (12 specifications); a VAR on returns gives Granger tests; a VECM is fitted only if cointegration is found.
+
+```{r var, code = script("03_var_cointegration.R")}
+```
+
+```{r var_figs, echo=FALSE}
+show_figs("^R05_")
+```
+
+# 3.3 ARCH / GARCH
+ARCH-LM test, GARCH(1,1) against variants (distribution, order, asymmetry), diagnostics of the standardized residuals, persistence, and the conditional volatility plot.
+
+```{r garch, code = script("04_garch.R")}
+```
+
+```{r garch_figs, echo=FALSE}
+show_figs("^R0[67]_")
+```
+
+# 4. LSTM and GRU (results computed in Python)
+The networks are trained in Python (`python/05_lstm_gru.py`, or `notebooks/advanced_models.ipynb`). Their validation results and loss curves are shown here for completeness.
+
+```{r nn_tables, echo=FALSE}
+f1 <- file.path(ROOT, "data", "rnn_cv_summary_py.csv")
+if (file.exists(f1)) knitr::kable(read.csv(f1), digits = 4, caption = "Walk-forward CV: ratio < 1 means better than 'always predict the average return'") else cat("Run the Python step first (data/rnn_cv_summary_py.csv not found).")
+```
+
+```{r nn_figs, echo=FALSE}
+fs <- list.files(file.path(ROOT, "figures"), pattern = "^06_rnn_loss|^07_rnn_h1", full.names = TRUE)
+if (length(fs)) knitr::include_graphics(fs)
+```
+
+# 6. Forecast evaluation, Diebold-Mariano tests, interval coverage
+Rolling-origin evaluation over the 186 origins of the test period: ARIMA, VAR and GARCH are re-estimated at every origin; LSTM and GRU forecasts come from Python; one metrics table, Diebold-Mariano tests with Holm correction, interval coverage.
+
+```{r evaluation, code = script("06_evaluation.R"), eval = file.exists(file.path(ROOT, "data", "forecast_rnn_py.csv"))}
+```
+
+```{r eval_figs, echo=FALSE}
+show_figs("^R08_")
+```
+
+# Session information (package versions)
+```{r session}
+sessionInfo()
+```

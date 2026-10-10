@@ -4,8 +4,6 @@ Modeling, forecasting and diagnostics of two correlated financial series: **Appl
 Theme: Finance (Option A). Data: Yahoo Finance adjusted close, daily, 2019-01-01 to 2026-09-30.
 Brief: `Mini_Project_Time_Series2_1st_periode_2026_SDIAE.pdf` (not in the repo; ask the group).
 
-> **Deadline / contact**: the brief contradicts itself (p.1: 12 Nov 2025, p.8: **12 Oct 2026, 23:55**; e-mail `tekup.de` vs `tek-up.de`). Confirm with the instructor before sending.
-> **Oral defense**: projects are drawn at random; EVERY member must be able to explain ALL code and choices.
 
 ## What is this project about? (plain-language version)
 
@@ -24,7 +22,7 @@ Brief: `Mini_Project_Time_Series2_1st_periode_2026_SDIAE.pdf` (not in the repo; 
    - **GARCH** models the *volatility* (how wildly the price swings). Volatility comes in clusters: calm periods followed by turbulent ones, such as the March 2020 crash. GARCH follows this and lets us give prediction ranges that are narrow in calm times and wide in turbulent times.
 4. **Neural networks (still to do).** LSTM and GRU are networks designed for sequences. We will test them with *walk-forward validation* (train on the past, predict the next period, move forward, repeat), as the correct form of cross-validation for time series.
 5. **Compare everything fairly.** Same test data, same error measures (MSE, RMSE, MAE, MAPE), and a **Diebold-Mariano test** to check whether one model's advantage is real or just luck.
-6. **Use an AI assistant (LLM) critically.** We ask a chatbot to suggest hypotheses and explain our results, **after** writing our own interpretation, then check where it is wrong or invents things.
+6. **Use an AI assistant (LLM) critically.** We ask a chatbot to suggest hypotheses and explain our results, then check where it is wrong or invents things.
 
 **What we found so far (in simple words).**
 - Apple's daily returns are close to unpredictable. The best simple model is barely better than "tomorrow equals today plus a small drift".
